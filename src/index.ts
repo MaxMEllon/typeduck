@@ -10,8 +10,8 @@ declare const process: {
 
 const createActionTypeWithValidation = (type: string) => {
   if (process.env.NODE_ENV !== "production") {
-    types.set(type, true)
     if (types.has(type)) throw new DuplicationActionTypeError(`${type} is already registrated`)
+    types.set(type, true)
   }
   return type
 }
@@ -22,6 +22,8 @@ export type Action<P> = {
   meta?: Object
   error?: boolean
 }
+
+export type AnyAction = Action<any>
 
 export interface ActionCreator<P> {
   (payload: P): Action<P>;
@@ -77,13 +79,13 @@ interface Handler<S, P> {
 }
 
 interface Reducer<S> {
-  (state: S, action: Action<any>): S
+  (state: S, action: AnyAction): S
   case<P>(actionCreator: ActionCreator<P>, handler: Handler<S, P>): this
 }
 
 export function createReducerWithInitialState<S>(initialState: S): Reducer<S> {
-  const actions = new Map<string, Handler<any, any>>()
-  const reducer = (state: S = initialState, { type, payload }: Action<any>) => {
+  const actions = new Map<string, Handler<S, any>>()
+  const reducer = (state: S = initialState, { type, payload }: AnyAction) => {
     const act = actions.has(type) && actions.get(type)
     return act ? act(state, payload) : state
   }
